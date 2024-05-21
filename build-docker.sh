@@ -61,6 +61,7 @@ function help_and_die() {
   echo "Option --prodtest is deprecated. Use "--targets prodtest" to build prodtest."
   echo "Set PRODUCTION=0 to run non-production builds."
   echo "Set VENDOR_HEADER=vendorheader_prodtest_unsigned.bin to use the specified vendor header for prodtest."
+  echo "Set BOOTLOADER_QA=1 to test Bootloader Signatures on Non-Production Builds."
   exit 0
 }
 
@@ -146,6 +147,7 @@ fi
 TAG="$1"
 COMMIT_HASH="$(git rev-parse "$TAG")"
 PRODUCTION=${PRODUCTION:-1}
+BOOTLOADER_QA=${BOOTLOADER_QA:-1}
 
 if which wget > /dev/null ; then
   wget --no-config -nc -P ci/ "$CONTAINER_FS_URL"
@@ -296,7 +298,7 @@ for TREZOR_MODEL in ${MODELS[@]}; do
 EOF
 
     echo
-    echo ">>> DOCKER RUN core BITCOIN_ONLY=$BITCOIN_ONLY TREZOR_MODEL=$TREZOR_MODEL PRODUCTION=$PRODUCTION"
+    echo ">>> DOCKER RUN core BITCOIN_ONLY=$BITCOIN_ONLY TREZOR_MODEL=$TREZOR_MODEL PRODUCTION=$PRODUCTION BOOTLOADER_QA=$BOOTLOADER_QA"
     echo "    (targets: ${CORE_TARGETS[@]})"
     echo
 
@@ -309,6 +311,7 @@ EOF
       --env BITCOIN_ONLY="$BITCOIN_ONLY" \
       --env TREZOR_MODEL="$TREZOR_MODEL" \
       --env PRODUCTION="$PRODUCTION" \
+      --env BOOTLOADER_QA="$BOOTLOADER_QA" \
       --env VENDOR_HEADER="$VENDOR_HEADER" \
       --init \
       "$SNAPSHOT_NAME" \
@@ -346,7 +349,7 @@ for BITCOIN_ONLY in ${VARIANTS_legacy[@]}; do
 EOF
 
   echo
-  echo ">>> DOCKER RUN legacy BITCOIN_ONLY=$BITCOIN_ONLY PRODUCTION=$PRODUCTION"
+  echo ">>> DOCKER RUN legacy BITCOIN_ONLY=$BITCOIN_ONLY PRODUCTION=$PRODUCTION BOOTLOADER_QA=$BOOTLOADER_QA"
   echo
 
   $DOCKER run \
@@ -357,6 +360,7 @@ EOF
     -v "$DIR/build/legacy$DIRSUFFIX":/build:z \
     --env BITCOIN_ONLY="$BITCOIN_ONLY" \
     --env PRODUCTION="$PRODUCTION" \
+    --env BOOTLOADER_QA="$BOOTLOADER_QA" \
     --init \
     "$SNAPSHOT_NAME" \
     /nix/var/nix/profiles/default/bin/nix-shell --run "bash /local/build/$SCRIPT_NAME"
